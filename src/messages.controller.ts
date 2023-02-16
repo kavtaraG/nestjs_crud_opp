@@ -1,33 +1,43 @@
-import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
-import { CreateMessageDto } from './dto/create-message.dto';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  NotFoundException,
+} from '@nestjs/common';
+import { CreateMassagesDto } from './dto/create-message.dto';
 import { MessagesService } from './messages.service';
 
 @Controller('/messages')
 export class messagesController {
-  messageService: MessagesService;
-  constructor() {
-    this.messageService = new MessagesService();
-  }
+  constructor(public messagesService: MessagesService) {}
   @Get()
   @HttpCode(200)
-  recieve() {
-    return this.messageService.findAll();
+  async recieve() {
+    return await this.messagesService.findAll();
   }
 
   @Get('/:id')
   @HttpCode(200)
-  getById(@Param('id') id: string) {
+  async getById(@Param('id') id: string) {
     console.log(id);
-    return this.messageService.findOne(id);
+    const messages = await this.messagesService.findOne(id);
+
+    if (!messages) {
+      throw new NotFoundException('Message not found');
+    }
+    return messages;
   }
 
   @Post()
   @HttpCode(201)
-  create(@Body() inputMail: CreateMessageDto) {
+  async create(@Body() input: CreateMassagesDto) {
     console.log();
     const obj = {
-      mail: this.messageService.create(inputMail.password, inputMail.mail),
-      password: this.messageService.create(inputMail.password, inputMail.mail),
+      mail: await this.messagesService.create(input.mail, input.password),
+      password: await this.messagesService.create(input.mail, input.password),
     };
     return obj;
   }
